@@ -48,7 +48,6 @@
         transform: translateY(0);
       }
     }
-
     .animate-fade-in {
       animation: fadeIn 0.4s ease-out forwards;
     }
@@ -56,7 +55,6 @@
 </head>
 
 <body class="bg-slate-950 text-slate-200 overflow-hidden h-screen">
-
   <div class="flex h-full w-full">
     <!-- Sidebar -->
     <aside class="w-20 md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300">
