@@ -1,1208 +1,1014 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EasyResult | Student Management System</title>
 
-  <!-- CDN deps -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResultPro | Student Management System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
   <style>
-    /* ── Base ── */
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; margin: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
 
-    /* ── Glass ── */
     .glass-card {
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
     }
 
-    /* ── Scrollbar ── */
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-    /* ── Animations ── */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 10px;
+    }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
 
-    /* ── Modal scroll fix ── */
-    /* overflow-hidden on modalContent was blocking scroll — removed via JS */
-    #modalContent { overflow-y: auto; }
-
-    /* ── Exam Config panel ── */
-    .config-step {
-      background: rgba(99,102,241,0.06);
-      border: 1px solid rgba(99,102,241,0.18);
-      border-radius: 1.25rem;
-      padding: 1.25rem 1.5rem;
-    }
-    .config-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: rgba(99,102,241,0.12);
-      color: #818cf8;
-      border: 1px solid rgba(99,102,241,0.25);
-      margin-bottom: .75rem;
-    }
-    .pass-mark-preview {
-      background: rgba(16,185,129,0.08);
-      border: 1px solid rgba(16,185,129,0.2);
-      border-radius: .75rem;
-      padding: .65rem 1rem;
-      font-size: 12px;
-      color: #6ee7b7;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: .75rem;
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
-    /* ── Number input: hide spinners for cleaner look ── */
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { opacity: 0.4; }
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
 
-    /* ── Select arrow colour ── */
-    select option { background: #1e293b; }
-
-    /* ── Error highlight ── */
-    .input-error { border-color: #ef4444 !important; box-shadow: 0 0 0 2px rgba(239,68,68,0.3); }
+    /* Attendance Specific Print Styles */
+    @media print {
+      body { background: white !important; color: black !important; }
+      aside, header, .no-print, #nav-dashboard, #nav-students, #nav-attendance { display: none !important; }
+      main { padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+      .glass-card { background: white !important; border: none !important; box-shadow: none !important; }
+      table { width: 100% !important; border-collapse: collapse !important; }
+      th, td { border: 1px solid #000 !important; padding: 4px !important; color: black !important; }
+      th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; }
+      .text-emerald-500, .text-rose-500 { color: black !important; font-weight: bold; }
+    }
   </style>
 </head>
 
 <body class="bg-slate-950 text-slate-200 overflow-hidden h-screen">
-<div class="flex h-full w-full">
 
-  <!-- ══════════════════════ SIDEBAR ══════════════════════ -->
-  <aside class="w-20 md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300 shrink-0">
-    <div class="p-5 flex items-center gap-3">
-      <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/30">
-        <i data-lucide="award" class="text-white w-5 h-5"></i>
+  <div class="flex h-full w-full">
+    <!-- Sidebar -->
+    <aside class="w-16 md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300 shrink-0 z-40 relative">
+      <div class="p-4 md:p-6 flex items-center justify-center md:justify-start gap-3">
+        <div
+          class="w-8 h-8 md:w-10 md:h-10 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/30">
+          <i data-lucide="award" class="text-white w-5 h-5 md:w-6 md:h-6"></i>
+        </div>
+        <h1 class="font-bold text-xl tracking-tight text-white hidden md:block">EasyResult</h1>
       </div>
-      <h1 class="font-bold text-xl tracking-tight text-white hidden md:block">EasyResult</h1>
-    </div>
 
-    <nav class="flex-1 px-3 space-y-1 mt-4">
-      <button onclick="switchTab('dashboard')" id="nav-dashboard"
-        class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-600/20">
-        <i data-lucide="layout-dashboard" class="w-5 h-5 shrink-0"></i>
-        <span class="font-medium hidden md:block">Dashboard</span>
-      </button>
-      <button onclick="switchTab('students')" id="nav-students"
-        class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-slate-800 text-slate-400">
-        <i data-lucide="users" class="w-5 h-5 shrink-0"></i>
-        <span class="font-medium hidden md:block">Students</span>
-      </button>
-
-      <div class="pt-4 border-t border-slate-800 mt-4">
-        <p class="text-[10px] font-bold text-slate-500 uppercase px-1 mb-2 hidden md:block">Data Ops</p>
-        <button onclick="exportToExcel()"
-          class="w-full flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
-          <i data-lucide="download" class="w-5 h-5 shrink-0"></i>
-          <span class="font-medium hidden md:block">Export Data</span>
+      <nav class="flex-1 px-2 md:px-3 space-y-2 mt-4 md:mt-6">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard"
+          class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all bg-indigo-600 text-white shadow-lg">
+          <i data-lucide="layout-dashboard" class="w-5 h-5 md:w-6 md:h-6"></i>
+          <span class="font-medium hidden md:block">Dashboard</span>
         </button>
-      </div>
-    </nav>
-  </aside>
-
-  <!-- ══════════════════════ MAIN ══════════════════════ -->
-  <main class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 min-w-0">
-
-    <!-- Header -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-      <div>
-        <h2 id="page-title" class="text-3xl font-extrabold text-white">Academic Insights</h2>
-        <p class="text-slate-400 text-sm mt-1">Real-time performance analytics and records</p>
-      </div>
-      <button onclick="openModal()"
-        class="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-indigo-600/20 group shrink-0">
-        <i data-lucide="plus" class="w-4 h-4 group-hover:rotate-90 transition-transform duration-200"></i>
-        <span class="font-semibold">Add Student</span>
-      </button>
-    </header>
-
-    <!-- ── DASHBOARD VIEW ── -->
-    <div id="view-dashboard" class="space-y-8 animate-fade-in">
-
-      <!-- Stat cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-indigo-600/10 border border-indigo-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
-          <div>
-            <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Total Records</p>
-            <h4 id="stat-total" class="text-3xl font-black text-white">0</h4>
-          </div>
-          <i data-lucide="users" class="text-indigo-400 opacity-40 w-8 h-8"></i>
-        </div>
-        <div class="bg-emerald-600/10 border border-emerald-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
-          <div>
-            <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Pass Rate</p>
-            <h4 id="stat-pass" class="text-3xl font-black text-white">0%</h4>
-          </div>
-          <i data-lucide="check-circle" class="text-emerald-400 opacity-40 w-8 h-8"></i>
-        </div>
-        <div class="bg-amber-600/10 border border-amber-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
-          <div>
-            <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Active ATKT</p>
-            <h4 id="stat-atkt" class="text-3xl font-black text-white">0</h4>
-          </div>
-          <i data-lucide="trending-up" class="text-amber-400 opacity-40 w-8 h-8"></i>
-        </div>
-        <div class="bg-rose-600/10 border border-rose-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
-          <div>
-            <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Failures</p>
-            <h4 id="stat-fail" class="text-3xl font-black text-white">0</h4>
-          </div>
-          <i data-lucide="alert-circle" class="text-rose-400 opacity-40 w-8 h-8"></i>
-        </div>
-      </div>
-
-      <!-- Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="glass-card border border-slate-800 p-6 rounded-3xl">
-          <h3 class="text-base font-bold mb-6 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span> Outcome Distribution
-          </h3>
-          <!-- FIX: fixed height so chart renders correctly -->
-          <div style="height:260px; display:flex; align-items:center; justify-content:center;">
-            <canvas id="pieChart"></canvas>
-          </div>
-        </div>
-        <div class="glass-card border border-slate-800 p-6 rounded-3xl">
-          <h3 class="text-base font-bold mb-6 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span> Subject Averages
-          </h3>
-          <div style="height:220px; position:relative;">
-            <canvas id="barChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty state for dashboard -->
-      <div id="dashboard-empty" class="hidden text-center py-16">
-        <i data-lucide="bar-chart-2" class="w-16 h-16 mx-auto text-slate-700 mb-4"></i>
-        <p class="text-slate-500 text-lg font-semibold">No student data yet</p>
-        <p class="text-slate-600 text-sm mt-1">Add your first student to see analytics</p>
-      </div>
-    </div>
-
-    <!-- ── STUDENTS VIEW ── -->
-    <div id="view-students" class="hidden animate-fade-in">
-      <div class="glass-card border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-
-        <!-- Toolbar -->
-        <div class="p-5 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="relative flex-1 max-w-sm">
-            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none"></i>
-            <input type="text" id="searchInput" oninput="renderTable()" placeholder="Search students…"
-              class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-3 pl-11 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all text-sm">
-          </div>
-          <div class="flex bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700 gap-1 shrink-0">
-            <button onclick="setFilter('All')"  class="filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white">All</button>
-            <button onclick="setFilter('Pass')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors">Pass</button>
-            <button onclick="setFilter('Fail')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors">Fail</button>
-            <button onclick="setFilter('ATKT')" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors">ATKT</button>
-          </div>
-        </div>
-
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead>
-              <tr class="bg-slate-800/30 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
-                <th class="px-8 py-5">Full Name</th>
-                <th class="px-4 py-5">Subjects</th>
-                <th class="px-6 py-5">Status</th>
-                <th class="px-6 py-5">Summary</th>
-                <th class="px-8 py-5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="studentTableBody" class="divide-y divide-slate-800/50"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </main>
-</div>
-
-<!-- ══════════════════════ MODAL ══════════════════════ -->
-<div id="modal"
-  class="fixed inset-0 z-50 hidden items-center justify-center p-4"
-  style="background:rgba(0,0,0,0.8); backdrop-filter:blur(6px);">
-
-  <div id="modalContent"
-    class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-[2rem] shadow-2xl flex flex-col transition-transform duration-300 scale-95"
-    style="max-height:92vh;">
-
-    <!-- Modal header — sticky -->
-    <div class="p-7 border-b border-slate-800 flex justify-between items-center bg-slate-900 rounded-t-[2rem] shrink-0">
-      <div>
-        <h3 id="modal-title" class="text-2xl font-black text-white">Enroll Student</h3>
-        <p class="text-sm text-slate-500 mt-0.5">Provide details and subject marks</p>
-      </div>
-      <button onclick="closeModal()"
-        class="text-slate-500 hover:text-white p-2 rounded-2xl hover:bg-slate-800 transition-colors">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-    </div>
-
-    <!-- Modal body — scrollable -->
-    <form id="studentForm" onsubmit="saveStudent(event)" novalidate class="overflow-y-auto custom-scrollbar p-7 flex flex-col gap-6">
-      <input type="hidden" id="editId" />
-
-      <!-- Name row -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">First Name *</label>
-          <input type="text" id="fname" autocomplete="given-name"
-            class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-sm" />
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Middle Name</label>
-          <input type="text" id="mname" autocomplete="additional-name"
-            class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-sm" />
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Last Name *</label>
-          <input type="text" id="lname" autocomplete="family-name"
-            class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-sm" />
-        </div>
-      </div>
-
-      <!-- Exam Configuration -->
-      <div class="config-step">
-        <div class="config-badge">
-          <i data-lucide="settings" class="w-3 h-3"></i> Exam Configuration
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Total Marks -->
-          <div class="space-y-1.5">
-            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Marks Per Subject</label>
-            <select id="totalMarksSelect" onchange="handleTotalMarksChange()"
-              class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-sm cursor-pointer">
-              <option value="50">50</option>
-              <option value="80">80</option>
-              <option value="100" selected>100</option>
-              <option value="150">150</option>
-              <option value="200">200</option>
-              <option value="custom">Custom…</option>
-            </select>
-            <input type="number" id="totalMarksCustom" placeholder="Enter custom value (e.g. 75)" min="1" max="9999" step="1"
-              class="hidden w-full bg-slate-800 border border-indigo-500/40 rounded-2xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-sm mt-2" />
-          </div>
-          <!-- Passing % -->
-          <div class="space-y-1.5">
-            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Passing Percentage</label>
-            <select id="passPercSelect" onchange="handlePassPercChange()"
-              class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-sm cursor-pointer">
-              <option value="35" selected>35%</option>
-              <option value="40">40%</option>
-              <option value="50">50%</option>
-              <option value="custom">Custom…</option>
-            </select>
-            <input type="number" id="passPercCustom" placeholder="e.g. 45 (enter number only)" min="1" max="100" step="0.1"
-              class="hidden w-full bg-slate-800 border border-indigo-500/40 rounded-2xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-sm mt-2" />
-          </div>
-        </div>
-        <!-- Live preview -->
-        <div class="pass-mark-preview" id="passMarkPreview">
-          <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
-          <span id="passMarkText">Pass mark per subject: <strong>35</strong> out of <strong>100</strong> (35%)</span>
-        </div>
-      </div>
-
-      <!-- Marks divider -->
-      <div class="flex items-center gap-3">
-        <div class="h-px bg-slate-800 flex-1"></div>
-        <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">Marks Inventory</span>
-        <div class="h-px bg-slate-800 flex-1"></div>
-      </div>
-
-      <!-- Subject inputs — built dynamically -->
-      <div id="subjectInputsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
-
-      <!-- Form error message -->
-      <div id="formError" class="hidden bg-rose-500/10 border border-rose-500/20 rounded-2xl px-4 py-3 text-rose-400 text-sm flex items-center gap-2">
-        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
-        <span id="formErrorText"></span>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex justify-end gap-3 pt-2 border-t border-slate-800">
-        <button type="button" onclick="closeModal()"
-          class="px-7 py-3.5 text-slate-400 hover:text-white font-semibold transition-colors rounded-2xl hover:bg-slate-800">Discard</button>
-        <button type="submit"
-          class="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white px-9 py-3.5 rounded-2xl font-bold shadow-xl shadow-indigo-600/20 transition-all">
-          Confirm Enrollment
+        <button onclick="switchTab('students')" id="nav-students"
+          class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all hover:bg-slate-800 text-slate-400">
+          <i data-lucide="users" class="w-5 h-5 md:w-6 md:h-6"></i>
+          <span class="font-medium hidden md:block">Students</span>
         </button>
-      </div>
-    </form>
-  </div>
-</div>
+        <button onclick="switchTab('attendance')" id="nav-attendance"
+          class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all hover:bg-slate-800 text-slate-400">
+          <i data-lucide="calendar-check" class="w-5 h-5 md:w-6 md:h-6"></i>
+          <span class="font-medium hidden md:block">Attendance</span>
+        </button>
+        <button onclick="switchTab('settings')" id="nav-settings"
+          class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all hover:bg-slate-800 text-slate-400">
+          <i data-lucide="settings" class="w-5 h-5 md:w-6 md:h-6"></i>
+          <span class="font-medium hidden md:block">Settings</span>
+        </button>
 
-<!-- ══════════════════════ TOAST ══════════════════════ -->
-<div id="toast"
-  class="fixed bottom-8 right-8 px-5 py-3.5 rounded-2xl border bg-slate-900 border-slate-700 text-white shadow-2xl translate-x-[200%] transition-transform duration-500 z-[200] flex items-center gap-3 max-w-xs">
-  <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 shrink-0"></i>
-  <span id="toast-msg" class="text-sm font-medium">Success</span>
-</div>
+        <div class="pt-4 border-t border-slate-800 mt-4 mx-1 md:mx-2">
+          <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-2 hidden md:block">Data Ops</p>
+          <button onclick="exportToExcel()"
+            class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
+            <i data-lucide="download" class="w-5 h-5 md:w-6 md:h-6"></i>
+            <span class="font-medium hidden md:block">Export Data</span>
+          </button>
+        </div>
+      </nav>
+    </aside>
 
-<!-- ══════════════════════ SCRIPT ══════════════════════ -->
-<script>
-"use strict";
+    <main class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
+      <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8 no-print text-center md:text-left">
+        <div>
+          <h2 id="page-title" class="text-2xl md:text-3xl font-extrabold text-white">Academic Insights</h2>
+          <p class="text-sm md:text-base text-slate-400" id="page-subtitle">Real-time performance analytics and records</p>
+        </div>
+        <button onclick="openModal()" id="btn-add-student"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-indigo-600/20 group w-full md:w-auto">
+          <i data-lucide="plus" class="group-hover:rotate-90 transition-transform"></i>
+          <span>Add Student</span>
+        </button>
+      </header>
 
-/* ─────────────────────────── STATE ─────────────────────────── */
-let students      = [];
-let currentFilter = 'All';
-let charts        = { pie: null, bar: null };
-let toastTimer    = null;
-
-// Load from localStorage safely
-try {
-  const raw = localStorage.getItem('rp_students');
-  if (raw) students = JSON.parse(raw) || [];
-} catch (e) { students = []; }
-
-/* ─────────────── SUBJECT DEFINITION (single source of truth) ─────────────── */
-const SUBJECTS = [
-  { id: 's_english', label: 'English'        },
-  { id: 's_maths',   label: 'Maths'          },
-  { id: 's_marathi', label: 'Marathi'        },
-  { id: 's_hindi',   label: 'Hindi'          },
-  { id: 's_science', label: 'Science'        },
-  { id: 's_history', label: 'History/Civics' },
-  { id: 's_geo',     label: 'Geography'      },
-];
-
-/* ─────────────── INIT ─────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  lucide.createIcons();
-  buildSubjectInputs();
-  refreshPassMarkPreview();
-  updateDashboard();
-  renderTable();
-});
-
-/* ─────────────────────────── NAVIGATION ─────────────────────────── */
-function switchTab(tab) {
-  const isDash = tab === 'dashboard';
-  document.getElementById('view-dashboard').classList.toggle('hidden', !isDash);
-  document.getElementById('view-students').classList.toggle('hidden', isDash);
-  document.getElementById('page-title').textContent = isDash ? 'Academic Insights' : 'Student Database';
-
-  ['dashboard', 'students'].forEach(t => {
-    const btn = document.getElementById('nav-' + t);
-    const active = t === tab;
-    btn.classList.toggle('bg-indigo-600', active);
-    btn.classList.toggle('shadow-lg', active);
-    btn.classList.toggle('shadow-indigo-600/20', active);
-    btn.classList.toggle('text-white', active);
-    btn.classList.toggle('text-slate-400', !active);
-    btn.classList.toggle('hover:bg-slate-800', !active);
-  });
-
-  if (isDash) updateDashboard();
-}
-
-/* ─────────────────────────── EXAM CONFIG ─────────────────────────── */
-
-/** Get total marks per subject currently selected in form */
-function getConfiguredTotalMarks() {
-  const sel = document.getElementById('totalMarksSelect');
-  if (!sel) return 100;
-  if (sel.value === 'custom') {
-    const v = parseFloat(document.getElementById('totalMarksCustom').value);
-    return (!isNaN(v) && v > 0) ? v : 0;
-  }
-  return parseFloat(sel.value) || 100;
-}
-
-/** Get passing percentage currently selected in form */
-function getConfiguredPassPerc() {
-  const sel = document.getElementById('passPercSelect');
-  if (!sel) return 35;
-  if (sel.value === 'custom') {
-    const v = parseFloat(document.getElementById('passPercCustom').value);
-    return (!isNaN(v) && v > 0 && v <= 100) ? v : 0;
-  }
-  return parseFloat(sel.value) || 35;
-}
-
-/** Calculate the raw pass mark */
-function calcPassMark(totalMarks, passPerc) {
-  return (totalMarks * passPerc) / 100;
-}
-
-/** Refresh the live preview badge and input max attributes */
-function refreshPassMarkPreview() {
-  const tm = getConfiguredTotalMarks();
-  const pp = getConfiguredPassPerc();
-  if (tm <= 0 || pp <= 0) {
-    document.getElementById('passMarkText').innerHTML = 'Enter valid total marks and passing percentage';
-    return;
-  }
-  const pm = calcPassMark(tm, pp);
-  const pmDisplay = Number.isInteger(pm) ? pm : pm.toFixed(2);
-  document.getElementById('passMarkText').innerHTML =
-    `Pass mark per subject: <strong>${pmDisplay}</strong> out of <strong>${tm}</strong> (${pp}%)`;
-
-  // Sync max attribute on all subject inputs
-  document.querySelectorAll('#subjectInputsGrid input[type="number"]').forEach(inp => {
-    inp.max = tm;
-    inp.placeholder = `0 – ${tm}`;
-  });
-}
-
-function handleTotalMarksChange() {
-  const sel  = document.getElementById('totalMarksSelect');
-  const cust = document.getElementById('totalMarksCustom');
-  if (sel.value === 'custom') {
-    cust.classList.remove('hidden');
-    // Attach once — use oninput attribute on element, not addEventListener to avoid stacking
-  } else {
-    cust.classList.add('hidden');
-    cust.value = '';
-  }
-  refreshPassMarkPreview();
-  // Rebuild inputs to sync max values
-  buildSubjectInputs(collectCurrentMarks());
-}
-
-function handlePassPercChange() {
-  const sel  = document.getElementById('passPercSelect');
-  const cust = document.getElementById('passPercCustom');
-  if (sel.value === 'custom') {
-    cust.classList.remove('hidden');
-  } else {
-    cust.classList.add('hidden');
-    cust.value = '';
-  }
-  refreshPassMarkPreview();
-}
-
-/** Collect whatever marks are currently in the inputs (for rebuild on config change) */
-function collectCurrentMarks() {
-  const m = {};
-  SUBJECTS.forEach(sub => {
-    const inp = document.getElementById(sub.id);
-    if (inp && inp.value !== '') m[sub.id] = parseFloat(inp.value);
-  });
-  return m;
-}
-
-/* ─────────────────────────── SUBJECT INPUT GRID ─────────────────────────── */
-function buildSubjectInputs(existingMarks = {}) {
-  const tm   = getConfiguredTotalMarks() || 100;
-  const grid = document.getElementById('subjectInputsGrid');
-  if (!grid) return;
-
-  grid.innerHTML = SUBJECTS.map(sub => {
-    const val = existingMarks[sub.id] !== undefined ? existingMarks[sub.id] : '';
-    return `
-      <div class="space-y-2 text-center">
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">${sub.label}</label>
-        <input
-          type="number" id="${sub.id}"
-          min="0" max="${tm}" step="1"
-          placeholder="0 – ${tm}"
-          value="${val}"
-          oninput="onMarkInput(this)"
-          class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-2 py-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none text-center font-bold text-sm transition-all" />
-      </div>`;
-  }).join('');
-
-  lucide.createIcons();
-}
-
-function onMarkInput(inp) {
-  inp.classList.remove('input-error');
-  hideFormError();
-  const tm = getConfiguredTotalMarks();
-  if (inp.value === '') return;
-  const v = parseFloat(inp.value);
-  if (isNaN(v) || v < 0) {
-    inp.value = 0;
-    return;
-  }
-  if (v > tm) {
-    inp.value = tm;
-    showToast(`Max marks per subject is ${tm}`, 'alert-circle', 'amber');
-  }
-}
-
-/* ─────────────────────────── CALCULATION LOGIC ─────────────────────────── */
-/**
- * @param {Object} marksMap         { subjectId: obtainedMark }
- * @param {number} totalMarksPerSub
- * @param {number} passingPerc      0-100
- * @returns {{ total, maxMarks, percentage, status, failCount, passMark }}
- */
-function calculateResult(marksMap, totalMarksPerSub, passingPerc) {
-  const values      = Object.values(marksMap);
-  const numSubjects = values.length;
-  const passMark    = calcPassMark(totalMarksPerSub, passingPerc);
-  const failCount   = values.filter(v => v < passMark).length;
-  const total       = values.reduce((a, b) => a + b, 0);
-  const maxMarks    = numSubjects * totalMarksPerSub;
-  const percentage  = maxMarks > 0 ? ((total / maxMarks) * 100).toFixed(2) : '0.00';
-
-  let status = 'Pass';
-  if (failCount >= 3)      status = 'Fail';
-  else if (failCount >= 1) status = 'ATKT';
-
-  return { total, maxMarks, percentage, status, failCount, passMark };
-}
-
-/* ─────────────────────────── CRUD ─────────────────────────── */
-function saveStudent(e) {
-  e.preventDefault();
-  clearAllInputErrors();
-  hideFormError();
-
-  // ── Validate name
-  const fname = document.getElementById('fname').value.trim();
-  const mname = document.getElementById('mname').value.trim();
-  const lname = document.getElementById('lname').value.trim();
-
-  if (!fname) {
-    markInputError('fname', 'First name is required');
-    return;
-  }
-  if (!lname) {
-    markInputError('lname', 'Last name is required');
-    return;
-  }
-
-  // ── Validate config
-  const totalMarksPerSubject = getConfiguredTotalMarks();
-  const passingPercentage    = getConfiguredPassPerc();
-
-  if (!totalMarksPerSubject || totalMarksPerSubject <= 0) {
-    showFormError('Please enter a valid total marks value (must be > 0)');
-    return;
-  }
-  if (!passingPercentage || passingPercentage <= 0 || passingPercentage > 100) {
-    showFormError('Passing percentage must be between 1 and 100');
-    return;
-  }
-
-  // ── Collect & validate marks
-  const marks = {};
-  let hasError = false;
-
-  SUBJECTS.forEach(sub => {
-    const inp = document.getElementById(sub.id);
-    const raw = inp.value.trim();
-    if (raw === '') {
-      markInputError(sub.id, `${sub.label} is required`);
-      hasError = true;
-      return;
-    }
-    const v = parseFloat(raw);
-    if (isNaN(v) || v < 0) {
-      markInputError(sub.id, `${sub.label}: invalid value`);
-      hasError = true;
-      return;
-    }
-    if (v > totalMarksPerSubject) {
-      markInputError(sub.id, `${sub.label}: cannot exceed ${totalMarksPerSubject}`);
-      hasError = true;
-      return;
-    }
-    marks[sub.id] = v;
-  });
-
-  if (hasError) {
-    showFormError('Please fix the highlighted fields above');
-    return;
-  }
-
-  const result  = calculateResult(marks, totalMarksPerSubject, passingPercentage);
-  const editId  = document.getElementById('editId').value;
-
-  const student = {
-    id:                   editId || String(Date.now()),
-    firstName:            fname,
-    middleName:           mname,
-    lastName:             lname,
-    fullName:             [fname, mname, lname].filter(Boolean).join(' '),
-    marks,
-    totalMarksPerSubject,
-    passingPercentage,
-    ...result
-  };
-
-  if (editId) {
-    const idx = students.findIndex(s => s.id === editId);
-    if (idx !== -1) students[idx] = student;
-    showToast('Record updated', 'check-circle', 'emerald');
-  } else {
-    students.push(student);
-    showToast('Student enrolled', 'check-circle', 'indigo');
-  }
-
-  saveToStorage();
-  closeModal();
-  renderTable();
-  updateDashboard();
-}
-
-function deleteStudent(id) {
-  if (!confirm('Delete this student record permanently?')) return;
-  students = students.filter(s => s.id !== id);
-  saveToStorage();
-  renderTable();
-  updateDashboard();
-  showToast('Record deleted', 'trash-2', 'rose');
-}
-
-function editStudent(id) {
-  const s = students.find(x => x.id === id);
-  if (!s) return;
-
-  document.getElementById('editId').value = s.id;
-  document.getElementById('fname').value  = s.firstName  || '';
-  document.getElementById('mname').value  = s.middleName || '';
-  document.getElementById('lname').value  = s.lastName   || '';
-
-  // Restore Total Marks
-  const tmSel  = document.getElementById('totalMarksSelect');
-  const tmStr  = String(s.totalMarksPerSubject);
-  const tmOpts = [...tmSel.options].map(o => o.value);
-  if (tmOpts.includes(tmStr)) {
-    tmSel.value = tmStr;
-    document.getElementById('totalMarksCustom').classList.add('hidden');
-  } else {
-    tmSel.value = 'custom';
-    const c = document.getElementById('totalMarksCustom');
-    c.classList.remove('hidden');
-    c.value = s.totalMarksPerSubject;
-  }
-
-  // Restore Pass %
-  const ppSel  = document.getElementById('passPercSelect');
-  const ppStr  = String(s.passingPercentage);
-  const ppOpts = [...ppSel.options].map(o => o.value);
-  if (ppOpts.includes(ppStr)) {
-    ppSel.value = ppStr;
-    document.getElementById('passPercCustom').classList.add('hidden');
-  } else {
-    ppSel.value = 'custom';
-    const c = document.getElementById('passPercCustom');
-    c.classList.remove('hidden');
-    c.value = s.passingPercentage;
-  }
-
-  refreshPassMarkPreview();
-  buildSubjectInputs(s.marks);
-
-  document.getElementById('modal-title').textContent = 'Edit Record';
-  openModal();
-}
-
-/* ─────────────────────────── TABLE RENDER ─────────────────────────── */
-function renderTable() {
-  const body   = document.getElementById('studentTableBody');
-  const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-
-  const filtered = students
-    .filter(s => {
-      const matchSearch = !search || s.fullName.toLowerCase().includes(search);
-      const matchFilter = currentFilter === 'All' || s.status === currentFilter;
-      return matchSearch && matchFilter;
-    })
-    .sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage));
-
-  if (!filtered.length) {
-    body.innerHTML = `
-      <tr>
-        <td colspan="5" class="py-24 text-center">
-          <div class="flex flex-col items-center gap-3 text-slate-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <p class="text-lg font-semibold">No records found</p>
-            <p class="text-sm">${search || currentFilter !== 'All' ? 'Try a different search or filter' : 'Click "Add Student" to get started'}</p>
-          </div>
-        </td>
-      </tr>`;
-    return;
-  }
-
-  body.innerHTML = filtered.map(s => {
-    const pm          = s.passMark ?? 35;
-    const initials    = (s.firstName[0] || '') + (s.lastName[0] || '');
-    const statusClass = s.status === 'Pass'
-      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-      : s.status === 'Fail'
-        ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-        : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    const dotClass = s.status === 'Pass' ? 'bg-emerald-400'
-      : s.status === 'Fail' ? 'bg-rose-400' : 'bg-amber-400';
-
-    const marksHTML = SUBJECTS
-      .filter(sub => s.marks[sub.id] !== undefined)
-      .map(sub => {
-        const m    = s.marks[sub.id];
-        const fail = m < pm;
-        return `<div title="${sub.label}: ${m}/${s.totalMarksPerSubject}"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold border
-            ${fail ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'}">${m}</div>`;
-      }).join('');
-
-    return `
-      <tr class="hover:bg-slate-800/20 transition-all group border-b border-slate-800/40 last:border-0">
-        <td class="px-8 py-5">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-sm shrink-0">
-              ${initials.toUpperCase()}
-            </div>
+      <!-- Dashboard View -->
+      <div id="view-dashboard" class="space-y-8 animate-fade-in">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            class="bg-indigo-600/10 border border-indigo-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
             <div>
-              <div class="font-semibold text-white group-hover:text-indigo-400 transition-colors text-sm">${s.fullName}</div>
-              <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID: ${s.id.slice(-8)}</div>
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Total Records</p>
+              <h4 id="stat-total" class="text-3xl font-black text-white">0</h4>
+            </div>
+            <i data-lucide="users" class="text-indigo-400 opacity-40" size="32"></i>
+          </div>
+          <div
+            class="bg-emerald-600/10 border border-emerald-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
+            <div>
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Pass rate</p>
+              <h4 id="stat-pass" class="text-3xl font-black text-white">0%</h4>
+            </div>
+            <i data-lucide="check-circle" class="text-emerald-400 opacity-40" size="32"></i>
+          </div>
+          <div
+            class="bg-amber-600/10 border border-amber-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
+            <div>
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Active ATKT</p>
+              <h4 id="stat-atkt" class="text-3xl font-black text-white">0</h4>
+            </div>
+            <i data-lucide="trending-up" class="text-amber-400 opacity-40" size="32"></i>
+          </div>
+          <div
+            class="bg-rose-600/10 border border-rose-500/20 p-5 rounded-3xl flex items-center justify-between shadow-lg">
+            <div>
+              <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Failures</p>
+              <h4 id="stat-fail" class="text-3xl font-black text-white">0</h4>
+            </div>
+            <i data-lucide="alert-circle" class="text-rose-400 opacity-40" size="32"></i>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="glass-card border border-slate-800 p-6 rounded-3xl">
+            <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-indigo-500"></div> Outcome Distribution
+            </h3>
+            <div class="h-128 flex justify-center"><canvas id="pieChart"></canvas></div>
+          </div>
+          <div class="glass-card border border-slate-800 p-6 rounded-3xl">
+            <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-indigo-500"></div> Subject Averages
+            </h3>
+            <div class="h-64"><canvas id="barChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students View -->
+      <div id="view-students" class="hidden animate-fade-in">
+        <div class="glass-card border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+          <div class="p-6 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="relative flex-1 max-w-md">
+              <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size="18"></i>
+              <input type="text" id="searchInput" onkeyup="handleSearch()" placeholder="Search students..."
+                class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all">
+            </div>
+            <div class="flex bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700 overflow-x-auto whitespace-nowrap hide-scrollbar">
+              <button onclick="setFilter('All')"
+                class="filter-btn active px-4 md:px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shrink-0">All</button>
+              <button onclick="setFilter('Pass')"
+                class="filter-btn px-4 md:px-5 py-2 rounded-xl text-sm font-semibold text-slate-500 shrink-0">Pass</button>
+              <button onclick="setFilter('Fail')"
+                class="filter-btn px-4 md:px-5 py-2 rounded-xl text-sm font-semibold text-slate-500 shrink-0">Fail</button>
+              <button onclick="setFilter('ATKT')"
+                class="filter-btn px-4 md:px-5 py-2 rounded-xl text-sm font-semibold text-slate-500 shrink-0">ATKT</button>
             </div>
           </div>
-        </td>
-        <td class="px-4 py-5">
-          <div class="flex gap-1 flex-wrap">${marksHTML}</div>
-        </td>
-        <td class="px-6 py-5">
-          <span class="px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase inline-flex items-center gap-1.5 border ${statusClass}">
-            <span class="w-1.5 h-1.5 rounded-full ${dotClass} inline-block"></span>${s.status}
-          </span>
-        </td>
-        <td class="px-6 py-5">
-          <div class="font-bold text-white text-base leading-tight">${s.percentage}%</div>
-          <div class="text-[10px] text-slate-500 mt-0.5">${s.total} / ${s.maxMarks}</div>
-        </td>
-        <td class="px-8 py-5">
-          <div class="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onclick="downloadPDF('${s.id}')" title="Download PDF"
-              class="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-              </svg>
-            </button>
-            <button onclick="editStudent('${s.id}')" title="Edit"
-              class="p-2 hover:bg-indigo-500/10 rounded-xl text-indigo-400 hover:text-indigo-300 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-            </button>
-            <button onclick="deleteStudent('${s.id}')" title="Delete"
-              class="p-2 hover:bg-rose-500/10 rounded-xl text-rose-400 hover:text-rose-300 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </button>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-slate-800/30 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                  <th class="px-8 py-5">Full Name</th>
+                  <th class="px-4 py-5">Subjects</th>
+                  <th class="px-6 py-5">Status</th>
+                  <th class="px-6 py-5">Summary</th>
+                  <th class="px-8 py-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody" class="divide-y divide-slate-800/50">
+                <!-- Data injected via JS -->
+              </tbody>
+            </table>
           </div>
-        </td>
-      </tr>`;
-  }).join('');
-}
+        </div>
+      </div>
 
-/* ─────────────────────────── DASHBOARD ─────────────────────────── */
-function updateDashboard() {
-  const total  = students.length;
-  const passed = students.filter(s => s.status === 'Pass').length;
-  const failed = students.filter(s => s.status === 'Fail').length;
-  const atkt   = students.filter(s => s.status === 'ATKT').length;
+      <!-- Settings View -->
+      <div id="view-settings" class="hidden animate-fade-in space-y-4 md:space-y-6">
+          <div class="glass-card border border-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl p-4 md:p-6">
+              <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                  <div>
+                      <h3 class="text-xl font-bold text-white">Subject Configuration</h3>
+                      <p class="text-sm text-slate-500">Define subjects and maximum marks. (Passing is 35%)</p>
+                  </div>
+                  <button onclick="addSubjectRow()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-all"><i data-lucide="plus" size="16"></i> <span class="hidden sm:inline">Add Subject</span></button>
+              </div>
+              <div class="space-y-3" id="settings-subjects-container">
+                  <!-- Dynamic Rows -->
+              </div>
+              <div class="mt-8 flex justify-end">
+                  <button onclick="saveSettings()" class="px-6 py-3 w-full sm:w-auto justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all"><i data-lucide="save" size="18"></i> Save Configuration</button>
+              </div>
+          </div>
+      </div>
 
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-pass').textContent  = total ? Math.round((passed / total) * 100) + '%' : '0%';
-  document.getElementById('stat-atkt').textContent  = atkt;
-  document.getElementById('stat-fail').textContent  = failed;
+      <!-- Attendance View -->
+      <div id="view-attendance" class="hidden animate-fade-in space-y-4 md:space-y-6">
+        <!-- Attendance Tabs -->
+        <div class="flex flex-col sm:flex-row gap-2 md:gap-4 mb-2 no-print">
+            <button onclick="switchAttView('daily')" id="btn-att-daily" class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition-all text-sm md:text-base">Daily Entry</button>
+            <button onclick="switchAttView('monthly')" id="btn-att-monthly" class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-slate-800/80 text-slate-400 font-bold hover:bg-slate-700 transition-all border border-slate-700 text-sm md:text-base">Monthly Register</button>
+        </div>
 
-  // Show/hide empty state
-  const emptyEl = document.getElementById('dashboard-empty');
-  if (emptyEl) emptyEl.classList.toggle('hidden', total > 0);
+        <!-- Daily Entry Sub-view -->
+        <div id="att-daily-view" class="glass-card border border-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+            <div class="p-4 md:p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/50">
+                <div class="flex flex-col sm:flex-row items-center gap-2 md:gap-4 w-full md:w-auto">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest self-start sm:self-center">Select Date</label>
+                    <input type="date" id="att-date" onchange="loadDailyAttendance()" class="w-full sm:w-auto bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all cursor-pointer">
+                </div>
+                <div class="grid grid-cols-2 sm:flex sm:flex-row gap-2 md:gap-3 w-full md:w-auto">
+                    <button onclick="markAllAtt('P')" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/20 font-bold text-xs md:text-sm transition-all whitespace-nowrap">All P</button>
+                    <button onclick="markAllAtt('A')" class="px-3 md:px-5 py-2 md:py-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/20 font-bold text-xs md:text-sm transition-all whitespace-nowrap">All A</button>
+                    <button onclick="saveDailyAttendance()" class="col-span-2 sm:col-span-1 px-4 md:px-6 py-2 md:py-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="save" size="16"></i> Save
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-800/30 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                            <th class="px-8 py-5">Roll / ID</th>
+                            <th class="px-6 py-5 text-left">Student Name</th>
+                            <th class="px-8 py-5 text-center">Attendance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="att-daily-tbody" class="divide-y divide-slate-800/50">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-  initCharts(passed, failed, atkt);
-}
+        <!-- Monthly Register Sub-view -->
+        <div id="att-monthly-view" class="hidden glass-card border border-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+            <div class="p-4 md:p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/50 no-print">
+                <div class="flex flex-col sm:flex-row items-center gap-2 md:gap-4 w-full md:w-auto">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest self-start sm:self-center">Select Month</label>
+                    <input type="month" id="month-select" onchange="loadMonthlyRegister()" class="w-full sm:w-auto bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all cursor-pointer">
+                </div>
+                <button onclick="window.print()" class="w-full md:w-auto justify-center px-5 py-2.5 rounded-xl bg-slate-800 text-white hover:bg-slate-700 font-bold text-sm flex items-center gap-2 border border-slate-700 transition-all">
+                    <i data-lucide="printer" size="16"></i> Print Register
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto custom-scrollbar p-2">
+                <table class="w-full text-left border-collapse" id="monthly-table">
+                    <thead id="monthly-thead" class="bg-slate-800/30 text-slate-400 text-[10px] font-bold tracking-wider">
+                        <!-- Populated by JS -->
+                    </thead>
+                    <tbody id="monthly-tbody" class="divide-y divide-slate-800/50 text-sm">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
 
-function initCharts(p, f, a) {
-  ['pie','bar'].forEach(k => { if (charts[k]) { charts[k].destroy(); charts[k] = null; } });
+    </main>
+  </div>
 
-  // ── Pie / Doughnut
-  const ctxPie = document.getElementById('pieChart');
-  if (ctxPie) {
-    charts.pie = new Chart(ctxPie, {
-      type: 'doughnut',
-      data: {
-        labels: ['Pass', 'Fail', 'ATKT'],
-        datasets: [{
-          data: [p, f, a],
-          backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-          borderWidth: 0,
-          hoverOffset: 12
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '68%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { color: '#94a3b8', padding: 16, font: { size: 12 } }
-          }
-        }
-      }
-    });
-  }
+  <!-- Add Student Modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+    <div
+      class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-2xl scale-95 transition-transform duration-300 my-auto"
+      id="modalContent">
+      <div class="p-6 md:p-8 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+        <div>
+          <h3 id="modal-title" class="text-xl md:text-2xl font-black text-white">Enroll Student</h3>
+          <p class="text-xs md:text-sm text-slate-500">Provide details and subject marks</p>
+        </div>
+        <button type="button" onclick="closeModal()"
+          class="text-slate-500 hover:text-white p-2 rounded-2xl hover:bg-slate-800 transition-colors"><i
+            data-lucide="x"></i></button>
+      </div>
 
-  // ── Bar — dynamic subjects, dynamic averages
-  const ctxBar = document.getElementById('barChart');
-  if (!ctxBar) return;
+      <form id="studentForm" onsubmit="saveStudent(event)" class="p-6 md:p-8">
+        <input type="hidden" id="editId">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+          <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">First Name</label>
+            <input required type="text" id="fname"
+              class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Middle Name</label>
+            <input type="text" id="mname"
+              class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Last Name</label>
+            <input required type="text" id="lname"
+              class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none">
+          </div>
+        </div>
 
-  // Collect averages only for subjects that have data
-  const totals = {}, counts = {};
-  students.forEach(s => {
-    SUBJECTS.forEach(sub => {
-      if (s.marks[sub.id] !== undefined) {
-        totals[sub.id] = (totals[sub.id] || 0) + s.marks[sub.id];
-        counts[sub.id] = (counts[sub.id] || 0) + 1;
-      }
-    });
-  });
+        <div class="mb-4 flex items-center gap-2">
+          <div class="h-px bg-slate-800 flex-1"></div>
+          <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] text-center">Marks Inventory</span>
+          <div class="h-px bg-slate-800 flex-1"></div>
+        </div>
 
-  const presentSubs = SUBJECTS.filter(sub => counts[sub.id]);
-  const barLabels   = presentSubs.map(sub => sub.label);
-  const barData     = presentSubs.map(sub => (totals[sub.id] / counts[sub.id]).toFixed(1));
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-10" id="dynamic-subject-inputs">
+           <!-- Injected dynamically -->
+        </div>
 
-  charts.bar = new Chart(ctxBar, {
-    type: 'bar',
-    data: {
-      labels: barLabels.length ? barLabels : ['No Data'],
-      datasets: [{
-        label: 'Average Score',
-        data:  barData.length  ? barData  : [0],
-        backgroundColor: '#6366f1',
-        borderRadius: 8,
-        borderSkipped: false
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid:  { color: '#1e293b' },
-          ticks: { color: '#64748b', font: { size: 11 } }
-        },
-        x: {
-          grid:  { display: false },
-          ticks: { color: '#64748b', font: { size: 11 } }
-        }
-      },
-      plugins: { legend: { display: false } }
-    }
-  });
-}
+        <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 md:gap-4">
+          <button type="button" onclick="closeModal()"
+            class="px-8 py-3 md:py-4 text-slate-500 hover:text-white font-bold transition-colors w-full sm:w-auto border border-slate-700 sm:border-none rounded-xl sm:rounded-none">Discard</button>
+          <button type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold shadow-xl shadow-indigo-600/20 transition-all w-full sm:w-auto">
+            Confirm Enrollment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-/* ─────────────────────────── EXPORT EXCEL ─────────────────────────── */
-function exportToExcel() {
-  if (!students.length) {
-    showToast('No data to export', 'alert-circle', 'amber');
-    return;
-  }
+  <!-- Toast Notification -->
+  <div id="toast"
+    class="fixed bottom-8 right-8 px-6 py-4 rounded-2xl border bg-slate-900 border-slate-800 text-white shadow-2xl translate-x-[200%] transition-transform duration-500 z-[100] flex items-center gap-3">
+    <i id="toast-icon" data-lucide="check-circle"></i>
+    <span id="toast-msg">Success</span>
+  </div>
 
-  const data = students.map(s => {
-    const row = {
-      'Student Name':         s.fullName,
-      'Total Marks/Subject':  s.totalMarksPerSubject,
-      'Passing Percentage':   s.passingPercentage + '%',
-      'Pass Mark':            Number.isInteger(s.passMark) ? s.passMark : parseFloat(s.passMark.toFixed(2)),
+  <script>
+    const defaultSubjects = [
+        { name: 'English', maxMarks: 100 },
+        { name: 'Maths', maxMarks: 100 },
+        { name: 'Hindi', maxMarks: 100 },
+        { name: 'Marathi', maxMarks: 100 },
+        { name: 'Science', maxMarks: 100 },
+        { name: 'History/civics', maxMarks: 100 },
+        { name: 'Geography', maxMarks: 100 }
+    ];
+    let rp_subjects = JSON.parse(localStorage.getItem('rp_subjects')) || defaultSubjects;
+    let students = JSON.parse(localStorage.getItem('rp_students')) || [];
+    let attendance = JSON.parse(localStorage.getItem('rp_attendance')) || {};
+    let currentDailyData = {};
+    let currentFilter = 'All';
+    let charts = {};
+
+    // Initialization
+    window.onload = () => {
+      lucide.createIcons();
+      updateDashboard();
+      renderTable();
+      
+      // Init attendance dates
+      let today = new Date();
+      let dd = String(today.getDate()).padStart(2, '0');
+      let mm = String(today.getMonth() + 1).padStart(2, '0');
+      let yyyy = today.getFullYear();
+      document.getElementById('att-date').value = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('month-select').value = `${yyyy}-${mm}`;
     };
-    SUBJECTS.forEach(sub => {
-      if (s.marks[sub.id] !== undefined) row[sub.label] = s.marks[sub.id];
-    });
-    row['Total Obtained'] = s.total;
-    row['Max Marks']      = s.maxMarks;
-    row['Percentage']     = s.percentage + '%';
-    row['Result']         = s.status;
-    return row;
-  });
 
-  try {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Results');
-    XLSX.writeFile(wb, 'Student_Results.xlsx');
-    showToast('Excel exported successfully', 'download', 'emerald');
-  } catch (err) {
-    showToast('Export failed — try again', 'alert-circle', 'rose');
-  }
-}
+    // Navigation
+    function switchTab(tab) {
+      document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'dashboard');
+      document.getElementById('view-students').classList.toggle('hidden', tab !== 'students');
+      document.getElementById('view-attendance').classList.toggle('hidden', tab !== 'attendance');
+      document.getElementById('view-settings').classList.toggle('hidden', tab !== 'settings');
 
-/* ─────────────────────────── PDF REPORT ─────────────────────────── */
-function downloadPDF(id) {
-  const s = students.find(x => x.id === id);
-  if (!s) return;
+      document.getElementById('nav-dashboard').classList.toggle('bg-indigo-600', tab === 'dashboard');
+      document.getElementById('nav-dashboard').classList.toggle('text-white', tab === 'dashboard');
+      document.getElementById('nav-dashboard').classList.toggle('text-slate-400', tab !== 'dashboard');
 
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      document.getElementById('nav-students').classList.toggle('bg-indigo-600', tab === 'students');
+      document.getElementById('nav-students').classList.toggle('text-white', tab === 'students');
+      document.getElementById('nav-students').classList.toggle('text-slate-400', tab !== 'students');
 
-    // Header bar
-    doc.setFillColor(30, 41, 59);
-    doc.rect(0, 0, 210, 38, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ACADEMIC REPORT CARD', 105, 18, { align: 'center' });
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('EasyResult — Student Management System', 105, 28, { align: 'center' });
+      document.getElementById('nav-attendance').classList.toggle('bg-indigo-600', tab === 'attendance');
+      document.getElementById('nav-attendance').classList.toggle('text-white', tab === 'attendance');
+      document.getElementById('nav-attendance').classList.toggle('text-slate-400', tab !== 'attendance');
 
-    // Student info
-    doc.setTextColor(15, 23, 42);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(s.fullName, 20, 52);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`ID: ${s.id.slice(-8)}`, 20, 59);
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })}`, 150, 59, { align: 'right' });
+      document.getElementById('nav-settings').classList.toggle('bg-indigo-600', tab === 'settings');
+      document.getElementById('nav-settings').classList.toggle('text-white', tab === 'settings');
+      document.getElementById('nav-settings').classList.toggle('text-slate-400', tab !== 'settings');
 
-    // Config info box
-    doc.setFillColor(241, 245, 249);
-    doc.roundedRect(20, 64, 170, 24, 3, 3, 'F');
-    doc.setTextColor(71, 85, 105);
-    doc.setFontSize(9);
-    const pm = s.passMark;
-    const pmDisp = Number.isInteger(pm) ? pm : pm.toFixed(2);
-    doc.text(`Total Marks Per Subject: ${s.totalMarksPerSubject}`, 27, 72);
-    doc.text(`Passing Percentage: ${s.passingPercentage}%`, 27, 79);
-    doc.text(`Required Pass Mark: ${pmDisp} / ${s.totalMarksPerSubject}`, 115, 72);
-    doc.text(`Subjects Appeared: ${Object.keys(s.marks).length}`, 115, 79);
+      const titles = {
+          'dashboard': ['Academic Insights', 'Real-time performance analytics and records'],
+          'students': ['Student Database', 'Manage student records and performance'],
+          'attendance': ['Attendance Register', 'Daily entries and monthly records'],
+          'settings': ['System Settings', 'Configure subjects, limits, and preferences']
+      };
+      
+      document.getElementById('page-title').innerText = titles[tab][0];
+      document.getElementById('page-subtitle').innerText = titles[tab][1];
+      
+      if(tab === 'attendance' || tab === 'settings') {
+          document.getElementById('btn-add-student').classList.add('hidden');
+          if (tab === 'attendance') loadDailyAttendance();
+          if (tab === 'settings') renderSettings();
+      } else {
+          document.getElementById('btn-add-student').classList.remove('hidden');
+      }
 
-    // Marks table
-    const tableRows = SUBJECTS
-      .filter(sub => s.marks[sub.id] !== undefined)
-      .map(sub => {
-        const m    = s.marks[sub.id];
-        const pct  = ((m / s.totalMarksPerSubject) * 100).toFixed(1);
-        const res  = m >= s.passMark ? 'PASS' : 'FAIL';
-        return [sub.label, `${m} / ${s.totalMarksPerSubject}`, `${pct}%`, res];
+      if (tab === 'dashboard') updateDashboard();
+    }
+
+    // --- Settings Logic ---
+    function renderSettings() {
+        const container = document.getElementById('settings-subjects-container');
+        container.innerHTML = rp_subjects.map((sub, index) => `
+            <div class="flex flex-col sm:flex-row gap-3 items-center bg-slate-800/50 p-3 rounded-xl border border-slate-700 relative">
+                <div class="w-full sm:w-1/2">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Subject Name</label>
+                    <input type="text" id="set_sub_name_${index}" value="${sub.name}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-sm">
+                </div>
+                <div class="w-full sm:w-1/3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Max Marks</label>
+                    <input type="number" id="set_sub_max_${index}" value="${sub.maxMarks}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-sm">
+                </div>
+                <div class="w-full sm:w-auto mt-4 sm:mt-5 flex justify-end">
+                    <button onclick="removeSubjectRow(${index})" class="p-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-lg transition-colors border border-rose-500/20"><i data-lucide="trash-2" size="18"></i></button>
+                </div>
+            </div>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    function addSubjectRow() {
+        rp_subjects.push({ name: 'New Subject', maxMarks: 100 });
+        renderSettings();
+    }
+
+    function removeSubjectRow(index) {
+        if(rp_subjects.length <= 1) return showToast("Must have at least 1 subject", "alert-circle", "rose");
+        rp_subjects.splice(index, 1);
+        renderSettings();
+    }
+
+    function saveSettings() {
+        let newSubjects = [];
+        for (let i = 0; i < rp_subjects.length; i++) {
+            let name = document.getElementById(`set_sub_name_${i}`).value.trim();
+            let max = parseInt(document.getElementById(`set_sub_max_${i}`).value);
+            if(!name || !max || max <= 0) return showToast("Invalid subject data", "alert-circle", "rose");
+            newSubjects.push({ name, maxMarks: max });
+        }
+        rp_subjects = newSubjects;
+        localStorage.setItem('rp_subjects', JSON.stringify(rp_subjects));
+        
+        // Recalculate all student totals and percentages based on new max marks
+        students = students.map(s => {
+            const res = calculateResult(s.marks);
+            return { ...s, ...res };
+        });
+        localStorage.setItem('rp_students', JSON.stringify(students));
+        
+        showToast("Settings saved successfully", "check-circle", "emerald");
+        renderTable();
+        updateDashboard();
+    }
+
+    // --- Attendance Logic ---
+    function switchAttView(view) {
+        document.getElementById('att-daily-view').classList.toggle('hidden', view !== 'daily');
+        document.getElementById('att-monthly-view').classList.toggle('hidden', view !== 'monthly');
+        
+        if (view === 'daily') {
+            document.getElementById('btn-att-daily').className = "px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition-all";
+            document.getElementById('btn-att-monthly').className = "px-6 py-2.5 rounded-xl bg-slate-800/80 text-slate-400 font-bold hover:bg-slate-700 transition-all border border-slate-700";
+            loadDailyAttendance();
+        } else {
+            document.getElementById('btn-att-monthly').className = "px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition-all";
+            document.getElementById('btn-att-daily').className = "px-6 py-2.5 rounded-xl bg-slate-800/80 text-slate-400 font-bold hover:bg-slate-700 transition-all border border-slate-700";
+            loadMonthlyRegister();
+        }
+    }
+
+    function loadDailyAttendance() {
+        const date = document.getElementById('att-date').value;
+        if (!date) return;
+        
+        currentDailyData = attendance[date] ? { ...attendance[date] } : {};
+        renderDailyAttendance();
+    }
+
+    function renderDailyAttendance() {
+        const tbody = document.getElementById('att-daily-tbody');
+        tbody.innerHTML = '';
+
+        if(students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="py-16 text-center text-slate-500 font-medium">No students enrolled yet.</td></tr>';
+            return;
+        }
+
+        const sortedStudents = [...students].sort((a,b) => a.fullName.localeCompare(b.fullName));
+
+        tbody.innerHTML = sortedStudents.map(s => {
+            let status = currentDailyData[s.id] || '';
+            let btnClass = 'bg-slate-800 text-slate-500 border border-slate-700';
+            let btnText = 'Not Marked';
+            
+            if(status === 'P') {
+                btnClass = 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+                btnText = 'Present';
+            } else if (status === 'A') {
+                btnClass = 'bg-rose-500/20 text-rose-400 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.2)]';
+                btnText = 'Absent';
+            }
+
+            return `
+                <tr class="hover:bg-slate-800/20 transition-all group border-b border-slate-800/40 last:border-0">
+                    <td class="px-8 py-4 font-mono text-slate-400 text-sm">${s.id.slice(-6)}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-white">${s.fullName}</div>
+                    </td>
+                    <td class="px-8 py-4 text-center">
+                        <button onclick="toggleStatus('${s.id}', this)" class="w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${btnClass}">${btnText}</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function toggleStatus(id, btn) {
+        let currentStatus = currentDailyData[id];
+        let newStatus = currentStatus === 'P' ? 'A' : 'P'; 
+        
+        currentDailyData[id] = newStatus;
+        
+        if(newStatus === 'P') {
+            btn.className = 'w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+            btn.textContent = 'Present';
+        } else {
+            btn.className = 'w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-rose-500/20 text-rose-400 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.2)]';
+            btn.textContent = 'Absent';
+        }
+        
+        // Auto-save
+        saveDailyAttendance(false);
+    }
+
+    function markAllAtt(status) {
+        students.forEach(s => {
+            currentDailyData[s.id] = status;
+        });
+        renderDailyAttendance(); 
+        saveDailyAttendance(false);
+        showToast(`All marked ${status === 'P' ? 'Present' : 'Absent'}`, "check-circle", "indigo");
+    }
+
+    function saveDailyAttendance(showNotification = true) {
+        const date = document.getElementById('att-date').value;
+        if (!date) {
+            if (showNotification) showToast("Invalid date", "alert-circle", "rose");
+            return;
+        }
+        
+        attendance[date] = { ...currentDailyData };
+        localStorage.setItem('rp_attendance', JSON.stringify(attendance));
+        if (showNotification) showToast(`Attendance saved for ${date}`, "calendar-check", "emerald");
+    }
+
+    function loadMonthlyRegister() {
+        const monthVal = document.getElementById('month-select').value; 
+        if (!monthVal) return;
+        
+        const [year, month] = monthVal.split('-');
+        const daysInMonth = new Date(year, month, 0).getDate();
+        
+        const thead = document.getElementById('monthly-thead');
+        const tbody = document.getElementById('monthly-tbody');
+        
+        let headerHtml = `<tr>
+            <th class="px-4 py-3 border-r border-slate-800/50 whitespace-nowrap sticky left-0 bg-slate-900 z-10 w-48">Student Name</th>`;
+            
+        for (let d = 1; d <= daysInMonth; d++) {
+            let dateObj = new Date(year, month - 1, d);
+            let isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+            let bgClass = isWeekend ? 'bg-slate-800/40' : '';
+            headerHtml += `<th class="px-2 py-3 border-r border-slate-800/50 text-center min-w-[30px] ${bgClass}" title="${dateObj.toDateString()}">${d}</th>`;
+        }
+        headerHtml += `<th class="px-3 py-3 text-center text-emerald-500 border-r border-slate-800/50">P</th><th class="px-3 py-3 text-center text-rose-500 border-r border-slate-800/50">A</th><th class="px-4 py-3 text-center text-indigo-400">%</th></tr>`;
+        thead.innerHTML = headerHtml;
+        
+        if(students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${daysInMonth + 4}" class="py-16 text-center text-slate-500">No data available.</td></tr>`;
+            return;
+        }
+
+        const sortedStudents = [...students].sort((a,b) => a.fullName.localeCompare(b.fullName));
+
+        tbody.innerHTML = sortedStudents.map(s => {
+            let presentCount = 0;
+            let totalWorkingDays = 0;
+            
+            let rowHtml = `<tr class="hover:bg-slate-800/20 transition-all group">
+                <td class="px-4 py-3 border-r border-slate-800/50 border-b whitespace-nowrap sticky left-0 bg-slate-900 z-10 group-hover:bg-slate-800 font-medium text-white">${s.fullName}</td>`;
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                let dateStr = `${year}-${month}-${d.toString().padStart(2, '0')}`;
+                let dateObj = new Date(year, month - 1, d);
+                let isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+                
+                let dayRecord = attendance[dateStr];
+                let status = dayRecord ? dayRecord[s.id] : null;
+                
+                let cellClass = isWeekend ? 'bg-slate-800/40' : '';
+                let cellText = '<span class="text-slate-600">-</span>';
+                
+                if (status === 'P') {
+                    cellText = '<span class="text-emerald-500 font-bold">P</span>';
+                    presentCount++;
+                    totalWorkingDays++;
+                } else if (status === 'A') {
+                    cellText = '<span class="text-rose-500 font-bold">A</span>';
+                    totalWorkingDays++;
+                }
+                
+                rowHtml += `<td class="px-2 py-3 border-r border-b border-slate-800/50 text-center ${cellClass}">${cellText}</td>`;
+            }
+            
+            let absentCount = totalWorkingDays - presentCount;
+            let percentage = totalWorkingDays > 0 ? Math.round((presentCount / totalWorkingDays) * 100) : 0;
+            
+            rowHtml += `
+                <td class="px-3 py-3 text-center border-r border-b border-slate-800/50 text-emerald-500 font-bold">${presentCount}</td>
+                <td class="px-3 py-3 text-center border-r border-b border-slate-800/50 text-rose-500 font-bold">${absentCount}</td>
+                <td class="px-4 py-3 text-center border-b border-slate-800/50 text-indigo-400 font-bold">${percentage}%</td>
+            </tr>`;
+            
+            return rowHtml;
+        }).join('');
+    }
+
+    // --- Result System Logic (Dynamic) ---
+    function calculateResult(marks) {
+      let failCount = 0;
+      let total = 0;
+      let totalMaxMarks = 0;
+
+      rp_subjects.forEach(sub => {
+          let score = marks[sub.name] || 0;
+          total += score;
+          totalMaxMarks += sub.maxMarks;
+          let passMark = sub.maxMarks * 0.35;
+          if (score < passMark) failCount++;
+      });
+      
+      const percentage = totalMaxMarks > 0 ? (total / totalMaxMarks) * 100 : 0;
+
+      let status = "Pass";
+      if (failCount === 2) status = "ATKT";
+      else if (failCount >= 3) status = "Fail";
+
+      return { total, percentage: percentage.toFixed(2), status, failCount };
+    }
+
+    // CRUD Operations
+    function saveStudent(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editId').value;
+      const marks = {};
+      rp_subjects.forEach((sub, i) => {
+          marks[sub.name] = parseInt(document.getElementById(`m_sub_${i}`).value) || 0;
       });
 
-    doc.autoTable({
-      startY: 92,
-      head:   [['Subject', 'Marks Obtained', 'Subject %', 'Status']],
-      body:   tableRows,
-      theme:  'striped',
-      headStyles:    { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold', fontSize: 10 },
-      bodyStyles:    { fontSize: 10, textColor: [15, 23, 42] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      columnStyles: {
-        0: { fontStyle: 'bold' },
-        3: { fontStyle: 'bold', halign: 'center' }
-      },
-      didDrawCell(data) {
-        if (data.section === 'body' && data.column.index === 3) {
-          data.cell.styles.textColor = data.cell.raw === 'FAIL' ? [220, 38, 38] : [5, 150, 105];
-        }
+      const result = calculateResult(marks);
+      const student = {
+        id: editId || Date.now().toString(),
+        firstName: document.getElementById('fname').value,
+        middleName: document.getElementById('mname').value,
+        lastName: document.getElementById('lname').value,
+        fullName: `${document.getElementById('fname').value} ${document.getElementById('mname').value} ${document.getElementById('lname').value}`.trim(),
+        marks,
+        ...result
+      };
+
+      if (editId) {
+        const index = students.findIndex(s => s.id === editId);
+        students[index] = student;
+        showToast("Record Updated", "check-circle", "emerald");
+      } else {
+        students.push(student);
+        showToast("Student Added", "check-circle", "indigo");
       }
-    });
 
-    // Summary section
-    const fy = doc.lastAutoTable.finalY + 10;
-    doc.setFillColor(248, 250, 252);
-    doc.roundedRect(20, fy, 170, 32, 3, 3, 'F');
+      localStorage.setItem('rp_students', JSON.stringify(students));
+      closeModal();
+      renderTable();
+      updateDashboard();
+      if(!document.getElementById('view-attendance').classList.contains('hidden')) {
+          loadDailyAttendance();
+      }
+    }
 
-    doc.setFontSize(10);
-    doc.setTextColor(71, 85, 105);
-    doc.text('Total Marks Obtained:', 27, fy + 10);
-    doc.text('Overall Percentage:', 27, fy + 18);
-    doc.text('Subjects Failed:', 27, fy + 26);
+    function deleteStudent(id) {
+      if (confirm("Delete this record permanently?")) {
+        students = students.filter(s => s.id !== id);
+        localStorage.setItem('rp_students', JSON.stringify(students));
+        
+        // Also cleanup attendance for this student (optional but good practice)
+        for(let date in attendance) {
+            if(attendance[date][id]) delete attendance[date][id];
+        }
+        localStorage.setItem('rp_attendance', JSON.stringify(attendance));
 
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text(`${s.total} / ${s.maxMarks}`, 95, fy + 10);
-    doc.text(`${s.percentage}%`, 95, fy + 18);
-    doc.text(`${s.failCount} of ${Object.keys(s.marks).length}`, 95, fy + 26);
+        renderTable();
+        updateDashboard();
+        showToast("Record Deleted", "trash-2", "rose");
+      }
+    }
 
-    // Result badge
-    const rc = s.status === 'Pass' ? [5, 150, 105] : s.status === 'Fail' ? [220, 38, 38] : [217, 119, 6];
-    doc.setFillColor(...rc);
-    doc.roundedRect(130, fy + 4, 55, 22, 4, 4, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.text(s.status.toUpperCase(), 157.5, fy + 18, { align: 'center' });
+    function editStudent(id) {
+      openModal(); // Render inputs first
+      const s = students.find(x => x.id === id);
+      document.getElementById('editId').value = s.id;
+      document.getElementById('fname').value = s.firstName;
+      document.getElementById('mname').value = s.middleName;
+      document.getElementById('lname').value = s.lastName;
+      
+      rp_subjects.forEach((sub, i) => {
+          const el = document.getElementById(`m_sub_${i}`);
+          if(el) el.value = s.marks[sub.name] !== undefined ? s.marks[sub.name] : 0;
+      });
 
-    // Footer
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'normal');
-    doc.text('This is a system-generated report. For official use only.', 105, 285, { align: 'center' });
+      document.getElementById('modal-title').innerText = "Edit Record";
+    }
 
-    doc.save(`${s.fullName.replace(/\s+/g, '_')}_Report.pdf`);
-    showToast('PDF downloaded', 'file-text', 'indigo');
-  } catch (err) {
-    console.error('PDF error:', err);
-    showToast('PDF generation failed', 'alert-circle', 'rose');
-  }
-}
+    function renderModalInputs() {
+        const container = document.getElementById('dynamic-subject-inputs');
+        container.innerHTML = rp_subjects.map((sub, i) => `
+          <div class="space-y-1 md:space-y-2 text-center">
+            <label class="text-[10px] font-bold text-slate-400 uppercase truncate px-1 block" title="${sub.name}">${sub.name.length > 8 ? sub.name.substring(0,8)+'..' : sub.name}</label>
+            <input required type="number" min="0" max="${sub.maxMarks}" id="m_sub_${i}"
+              class="w-full bg-slate-800 border border-slate-700 rounded-xl md:rounded-2xl p-3 md:p-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none text-center font-bold">
+          </div>
+        `).join('');
+    }
 
-/* ─────────────────────────── MODAL ─────────────────────────── */
-function openModal() {
-  const modal   = document.getElementById('modal');
-  const content = document.getElementById('modalContent');
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  // Slight delay so transition works
-  requestAnimationFrame(() => {
-    content.classList.remove('scale-95');
-    content.classList.add('scale-100');
-  });
-  // Trap scroll
-  document.body.style.overflow = 'hidden';
-  // Focus first field
-  setTimeout(() => document.getElementById('fname')?.focus(), 150);
-}
+    function renderTable() {
+      const body = document.getElementById('studentTableBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
 
-function closeModal() {
-  const modal   = document.getElementById('modal');
-  const content = document.getElementById('modalContent');
-  content.classList.remove('scale-100');
-  content.classList.add('scale-95');
-  setTimeout(() => {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  }, 200);
-  document.body.style.overflow = '';
+      const filtered = students.filter(s => {
+        const matchSearch = s.fullName.toLowerCase().includes(search);
+        const matchFilter = currentFilter === 'All' || s.status === currentFilter;
+        return matchSearch && matchFilter;
+      }).sort((a, b) => b.percentage - a.percentage);
 
-  // Reset form
-  document.getElementById('studentForm').reset();
-  document.getElementById('editId').value = '';
-  document.getElementById('modal-title').textContent = 'Enroll Student';
+      body.innerHTML = filtered.length ? filtered.map(s => `
+                <tr class="hover:bg-slate-800/20 transition-all group border-b border-slate-800/40 last:border-0">
+                    <td class="px-8 py-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">${s.firstName[0]}${s.lastName[0]}</div>
+                            <div>
+                                <div class="font-bold text-white group-hover:text-indigo-400 transition-colors">${s.fullName}</div>
+                                <div class="text-[10px] text-slate-500 font-mono">ID: ${s.id.slice(-6)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-6">
+                        <div class="flex gap-1 flex-wrap max-w-[200px]">
+                            ${rp_subjects.map(sub => {
+                                let m = s.marks[sub.name] !== undefined ? s.marks[sub.name] : 0;
+                                let passMark = sub.maxMarks * 0.35;
+                                return `<div title="${sub.name}: ${m}/${sub.maxMarks}" class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold border ${m < passMark ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'}">${m}</div>`;
+                            }).join('')}
+                        </div>
+                    </td>
+                    <td class="px-6 py-6">
+                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5 w-fit ${s.status === 'Pass' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : s.status === 'Fail' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}">
+                            <div class="w-1.5 h-1.5 rounded-full ${s.status === 'Pass' ? 'bg-emerald-500' : s.status === 'Fail' ? 'bg-rose-500' : 'bg-amber-500'}"></div>
+                            ${s.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-6">
+                        <div class="flex flex-col"><span class="text-white font-bold text-lg leading-tight">${s.percentage}%</span><span class="text-[10px] text-slate-500">${s.total} Total</span></div>
+                    </td>
+                    <td class="px-8 py-6 text-right">
+                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="downloadPDF('${s.id}')" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors" title="Download Report"><i data-lucide="printer" size="16"></i></button>
+                            <button onclick="editStudent('${s.id}')" class="p-2 hover:bg-indigo-500/10 rounded-lg text-indigo-400 transition-colors" title="Edit"><i data-lucide="edit-3" size="16"></i></button>
+                            <button onclick="deleteStudent('${s.id}')" class="p-2 hover:bg-rose-500/10 rounded-lg text-rose-400 transition-colors" title="Delete"><i data-lucide="trash-2" size="16"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('') : `<tr><td colspan="5" class="py-32 text-center text-slate-600"><p class="text-lg font-semibold">No records found</p></td></tr>`;
 
-  // Reset config
-  document.getElementById('totalMarksSelect').value = '100';
-  document.getElementById('totalMarksCustom').classList.add('hidden');
-  document.getElementById('totalMarksCustom').value = '';
-  document.getElementById('passPercSelect').value = '35';
-  document.getElementById('passPercCustom').classList.add('hidden');
-  document.getElementById('passPercCustom').value = '';
+      lucide.createIcons();
+    }
 
-  clearAllInputErrors();
-  hideFormError();
-  refreshPassMarkPreview();
-  buildSubjectInputs();
-}
+    function updateDashboard() {
+      const total = students.length;
+      const passed = students.filter(s => s.status === 'Pass').length;
+      const failed = students.filter(s => s.status === 'Fail').length;
+      const atkt = students.filter(s => s.status === 'ATKT').length;
 
-// Close modal when clicking backdrop
-document.getElementById('modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('stat-pass').innerText = total ? Math.round((passed / total) * 100) + '%' : '0%';
+      document.getElementById('stat-atkt').innerText = atkt;
+      document.getElementById('stat-fail').innerText = failed;
 
-// Close modal on Escape
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && !document.getElementById('modal').classList.contains('hidden')) {
-    closeModal();
-  }
-});
+      initCharts(passed, failed, atkt);
+    }
 
-/* ─────────────────────────── FILTER ─────────────────────────── */
-function setFilter(f) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    const isActive = btn.textContent.trim() === f;
-    btn.classList.toggle('bg-indigo-600', isActive);
-    btn.classList.toggle('text-white',    isActive);
-    btn.classList.toggle('text-slate-400', !isActive);
-  });
-  renderTable();
-}
+    function initCharts(p, f, a) {
+      const ctxPie = document.getElementById('pieChart').getContext('2d');
+      const ctxBar = document.getElementById('barChart').getContext('2d');
 
-/* ─────────────────────────── TOAST ─────────────────────────── */
-function showToast(msg, iconName, color) {
-  if (toastTimer) clearTimeout(toastTimer);
-  const toast    = document.getElementById('toast');
-  const iconEl   = document.getElementById('toast-icon');
-  const msgEl    = document.getElementById('toast-msg');
+      if (charts.pie) charts.pie.destroy();
+      if (charts.bar) charts.bar.destroy();
 
-  msgEl.textContent = msg;
-  // Set color class — use inline style to avoid Tailwind purge
-  const colourMap = {
-    indigo:  ['#6366f1', 'rgba(99,102,241,0.2)'],
-    emerald: ['#10b981', 'rgba(16,185,129,0.2)'],
-    rose:    ['#f43f5e', 'rgba(244,63,94,0.2)'],
-    amber:   ['#f59e0b', 'rgba(245,158,11,0.2)'],
-  };
-  const [fg, bg] = colourMap[color] || colourMap.indigo;
-  toast.style.color       = fg;
-  toast.style.borderColor = bg;
-  iconEl.style.color      = fg;
+      charts.pie = new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+          labels: ['Pass', 'Fail', 'ATKT'],
+          datasets: [{
+            data: [p, f, a],
+            backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+            borderWidth: 0,
+            hoverOffset: 15
+          }]
+        },
+        options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+      });
 
-  // Swap SVG icon inline (avoid lucide re-init flash)
-  const icons = {
-    'check-circle': `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
-    'alert-circle': `<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
-    'trash-2':      `<path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>`,
-    'download':     `<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>`,
-    'file-text':    `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>`,
-  };
-  iconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">${icons[iconName] || icons['check-circle']}</svg>`;
+      const subjs = rp_subjects.map(s => s.name);
+      const avgs = rp_subjects.map(sub => {
+        const sum = students.reduce((acc, s) => acc + (s.marks[sub.name] || 0), 0);
+        const avgRaw = students.length ? (sum / students.length) : 0;
+        return sub.maxMarks > 0 ? ((avgRaw / sub.maxMarks) * 100).toFixed(1) : 0;
+      });
 
-  toast.classList.remove('translate-x-[200%]');
-  toastTimer = setTimeout(() => toast.classList.add('translate-x-[200%]'), 3000);
-}
+      charts.bar = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: subjs.map(s => s.length > 8 ? s.substring(0,8)+'..' : s),
+          datasets: [{
+            label: 'Class Average (%)',
+            data: avgs,
+            backgroundColor: '#6366f1',
+            borderRadius: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: function(val){return val+'%';} } },
+            x: { grid: { display: false }, ticks: { color: '#64748b' } }
+          },
+          plugins: { 
+             legend: { display: false },
+             tooltip: {
+                callbacks: {
+                   label: function(context) {
+                      return 'Avg: ' + context.parsed.y + '%';
+                   }
+                }
+             }
+          }
+        }
+      });
+    }
 
-/* ─────────────────────────── VALIDATION HELPERS ─────────────────────────── */
-function markInputError(id, msg) {
-  const inp = document.getElementById(id);
-  if (inp) inp.classList.add('input-error');
-}
+    function exportToExcel() {
+      if (!students.length) return showToast("No data to export", "alert-circle", "amber");
+      const data = students.map(s => {
+        let row = { "Name": s.fullName };
+        rp_subjects.forEach(sub => {
+           row[`${sub.name} (/${sub.maxMarks})`] = s.marks[sub.name] !== undefined ? s.marks[sub.name] : 0;
+        });
+        row["Total"] = s.total;
+        row["Percentage"] = s.percentage + '%';
+        row["Status"] = s.status;
+        return row;
+      });
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Results");
+      XLSX.writeFile(wb, "Student_Report.xlsx");
+    }
 
-function clearAllInputErrors() {
-  document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-}
+    function downloadPDF(id) {
+      const s = students.find(x => x.id === id);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
-function showFormError(msg) {
-  const el = document.getElementById('formError');
-  document.getElementById('formErrorText').textContent = msg;
-  el.classList.remove('hidden');
-  el.classList.add('flex');
-  lucide.createIcons({ nodes: [el] });
-}
+      doc.setFillColor(30, 41, 59);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text("ACADEMIC REPORT CARD", 105, 25, { align: "center" });
 
-function hideFormError() {
-  const el = document.getElementById('formError');
-  el.classList.add('hidden');
-  el.classList.remove('flex');
-}
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(12);
+      doc.text(`Student: ${s.fullName}`, 20, 55);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, 150, 55);
 
-/* ─────────────────────────── STORAGE ─────────────────────────── */
-function saveToStorage() {
-  try {
-    localStorage.setItem('rp_students', JSON.stringify(students));
-  } catch (e) {
-    showToast('Storage full — export data before adding more', 'alert-circle', 'rose');
-  }
-}
-</script>
+      const tableData = rp_subjects.map(sub => {
+          let score = s.marks[sub.name] !== undefined ? s.marks[sub.name] : 0;
+          let passMark = sub.maxMarks * 0.35;
+          return [sub.name, score, sub.maxMarks, score >= passMark ? 'PASS' : 'FAIL'];
+      });
+      
+      doc.autoTable({
+        startY: 65,
+        head: [['Subject', 'Marks', 'Max', 'Status']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [99, 102, 241] }
+      });
+
+      doc.setFontSize(14);
+      doc.text(`Aggregate: ${s.percentage}%`, 20, doc.lastAutoTable.finalY + 15);
+      doc.text(`Result: ${s.status}`, 20, doc.lastAutoTable.finalY + 25);
+
+      doc.save(`${s.fullName.replace(/\s/g, '_')}_Result.pdf`);
+    }
+
+    function openModal() {
+      renderModalInputs();
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modalContent').classList.remove('scale-95');
+      document.getElementById('modalContent').classList.add('scale-100');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('studentForm').reset();
+      document.getElementById('editId').value = "";
+      document.getElementById('modal-title').innerText = "Enroll Student";
+    }
+
+    function handleSearch() {
+      renderTable();
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('bg-indigo-600', btn.innerText === f);
+        btn.classList.toggle('text-white', btn.innerText === f);
+        btn.classList.toggle('text-slate-500', btn.innerText !== f);
+      });
+      renderTable();
+    }
+
+    function showToast(msg, icon, color) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      document.getElementById('toast-icon').setAttribute('data-lucide', icon);
+      toast.className = `fixed bottom-8 right-8 px-6 py-4 rounded-2xl border bg-slate-900 shadow-2xl transition-transform duration-500 z-[100] flex items-center gap-3 border-${color}-500/30 text-${color}-500`;
+      lucide.createIcons();
+      toast.classList.remove('translate-x-[200%]');
+      setTimeout(() => toast.classList.add('translate-x-[200%]'), 3000);
+    }
+  </script>
 </body>
+
 </html>
