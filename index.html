@@ -78,7 +78,43 @@
 
 <body class="bg-slate-950 text-slate-200 overflow-hidden h-screen">
 
-  <div class="flex h-full w-full">
+  <!-- Login View -->
+  <div id="view-login" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md transition-opacity duration-500">
+    <div class="glass-card border border-slate-800 rounded-3xl p-8 shadow-2xl w-full max-w-md animate-fade-in relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500"></div>
+      <div class="flex justify-center mb-6">
+        <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30">
+          <i data-lucide="shield-check" class="text-white w-8 h-8"></i>
+        </div>
+      </div>
+      <h2 class="text-2xl font-bold text-center text-white mb-2">Welcome Back</h2>
+      <p class="text-center text-slate-400 mb-8 text-sm">Please sign in to continue</p>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Username</label>
+          <div class="relative">
+            <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size="18"></i>
+            <input type="text" id="login-user" placeholder="admin / user" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium">
+          </div>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Password</label>
+          <div class="relative">
+            <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size="18"></i>
+            <input type="password" id="login-pass" placeholder="••••••••" class="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium">
+          </div>
+        </div>
+        <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-indigo-600/20 mt-4 flex items-center justify-center gap-2">
+          <span>Sign In</span>
+          <i data-lucide="arrow-right" size="18"></i>
+        </button>
+        <p class="text-[10px] text-center text-slate-500 mt-4">Admin: admin/admin123 | User: user/user123</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-wrapper" class="flex h-full w-full hidden">
     <!-- Sidebar -->
     <aside class="w-16 md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300 shrink-0 z-40 relative">
       <div class="p-4 md:p-6 flex items-center justify-center md:justify-start gap-3">
@@ -105,6 +141,11 @@
           <i data-lucide="calendar-check" class="w-5 h-5 md:w-6 md:h-6"></i>
           <span class="font-medium hidden md:block">Attendance</span>
         </button>
+        <button onclick="switchTab('fees')" id="nav-fees"
+          class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all hover:bg-slate-800 text-slate-400">
+          <i data-lucide="credit-card" class="w-5 h-5 md:w-6 md:h-6"></i>
+          <span class="font-medium hidden md:block">Fees Record</span>
+        </button>
         <button onclick="switchTab('settings')" id="nav-settings"
           class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all hover:bg-slate-800 text-slate-400">
           <i data-lucide="settings" class="w-5 h-5 md:w-6 md:h-6"></i>
@@ -112,11 +153,16 @@
         </button>
 
         <div class="pt-4 border-t border-slate-800 mt-4 mx-1 md:mx-2">
-          <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-2 hidden md:block">Data Ops</p>
+          <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-2 hidden md:block">System</p>
           <button onclick="exportToExcel()"
             class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
             <i data-lucide="download" class="w-5 h-5 md:w-6 md:h-6"></i>
             <span class="font-medium hidden md:block">Export Data</span>
+          </button>
+          <button onclick="logout()"
+            class="w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl text-rose-400 hover:bg-rose-500/10 transition-all mt-1">
+            <i data-lucide="log-out" class="w-5 h-5 md:w-6 md:h-6"></i>
+            <span class="font-medium hidden md:block">Logout</span>
           </button>
         </div>
       </nav>
@@ -216,6 +262,7 @@
               <thead>
                 <tr class="bg-slate-800/30 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
                   <th class="px-8 py-5">Full Name</th>
+                  <th class="px-4 py-5 text-center">Std</th>
                   <th class="px-4 py-5">Subjects</th>
                   <th class="px-6 py-5">Status</th>
                   <th class="px-6 py-5">Summary</th>
@@ -247,6 +294,42 @@
                   <button onclick="saveSettings()" class="px-6 py-3 w-full sm:w-auto justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all"><i data-lucide="save" size="18"></i> Save Configuration</button>
               </div>
           </div>
+      </div>
+
+      <!-- Fees Record View -->
+      <div id="view-fees" class="hidden animate-fade-in">
+        <div class="glass-card border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+          <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="credit-card" class="text-indigo-500"></i> Fee Tracking</h3>
+          </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse min-w-[800px]">
+              <thead>
+                <tr class="bg-slate-800/30 text-[10px] uppercase tracking-widest text-slate-500 font-bold border-b border-slate-800">
+                  <th class="px-6 py-4">Student</th>
+                  <th class="px-4 py-4 text-center">Std</th>
+                  <th class="px-4 py-4">Admission</th>
+                  <th class="px-4 py-4">Next Due</th>
+                  <th class="px-4 py-4 text-center">Jan</th>
+                  <th class="px-4 py-4 text-center">Feb</th>
+                  <th class="px-4 py-4 text-center">Mar</th>
+                  <th class="px-4 py-4 text-center">Apr</th>
+                  <th class="px-4 py-4 text-center">May</th>
+                  <th class="px-4 py-4 text-center">Jun</th>
+                  <th class="px-4 py-4 text-center">Jul</th>
+                  <th class="px-4 py-4 text-center">Aug</th>
+                  <th class="px-4 py-4 text-center">Sep</th>
+                  <th class="px-4 py-4 text-center">Oct</th>
+                  <th class="px-4 py-4 text-center">Nov</th>
+                  <th class="px-4 py-4 text-center">Dec</th>
+                </tr>
+              </thead>
+              <tbody id="feesTableBody" class="text-sm">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- Attendance View -->
@@ -334,7 +417,7 @@
 
       <form id="studentForm" onsubmit="saveStudent(event)" class="p-6 md:p-8">
         <input type="hidden" id="editId">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-6 mb-6 md:mb-8">
           <div class="space-y-1">
             <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">First Name</label>
             <input required type="text" id="fname"
@@ -348,6 +431,16 @@
           <div class="space-y-1">
             <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Last Name</label>
             <input required type="text" id="lname"
+              class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Standard</label>
+            <input required type="text" id="std" placeholder="e.g. 10th"
+              class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Admiss. Date</label>
+            <input required type="date" id="admissionDate"
               class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-indigo-600 outline-none">
           </div>
         </div>
@@ -391,9 +484,20 @@
         { name: 'History/civics', maxMarks: 100 },
         { name: 'Geography', maxMarks: 100 }
     ];
+    let rp_role = localStorage.getItem('rp_role'); // 'admin' or 'user'
     let rp_subjects = JSON.parse(localStorage.getItem('rp_subjects')) || defaultSubjects;
-    let students = JSON.parse(localStorage.getItem('rp_students')) || [];
+    
+    // Inject default admission date to existing students if missing
+    let loadedStudents = JSON.parse(localStorage.getItem('rp_students')) || [];
+    loadedStudents.forEach(s => {
+        if (!s.std) s.std = '10th';
+        if (!s.admissionDate) s.admissionDate = new Date().toISOString().split('T')[0];
+    });
+    let students = loadedStudents;
+
     let attendance = JSON.parse(localStorage.getItem('rp_attendance')) || {};
+    let feesRecord = JSON.parse(localStorage.getItem('rp_fees')) || {}; // Format: { "id": [12 booleans] }
+    
     let currentDailyData = {};
     let currentFilter = 'All';
     let charts = {};
@@ -401,8 +505,22 @@
     // Initialization
     window.onload = () => {
       lucide.createIcons();
+      
+      if (!rp_role) {
+          // Show Login, hide main app
+          document.getElementById('app-wrapper').classList.add('hidden');
+          document.getElementById('view-login').classList.remove('opacity-0', 'pointer-events-none', 'hidden');
+          return;
+      } else {
+          document.getElementById('app-wrapper').classList.remove('hidden');
+          document.getElementById('view-login').classList.add('opacity-0', 'pointer-events-none', 'hidden');
+          applyRoleRestrictions();
+      }
+
       updateDashboard();
       renderTable();
+      renderFees();
+
       
       // Init attendance dates
       let today = new Date();
@@ -413,48 +531,114 @@
       document.getElementById('month-select').value = `${yyyy}-${mm}`;
     };
 
+    function login() {
+        const user = document.getElementById('login-user').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+        if (user === 'admin' && pass === 'admin123') {
+            localStorage.setItem('rp_role', 'admin');
+            location.reload();
+        } else if (user === 'user' && pass === 'user123') {
+            localStorage.setItem('rp_role', 'user');
+            location.reload();
+        } else {
+            showToast('Invalid credentials', 'alert-circle', 'rose');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('rp_role');
+        location.reload();
+    }
+
+    function applyRoleRestrictions() {
+        if (rp_role === 'user') {
+            document.getElementById('btn-add-student').style.display = 'none';
+            // Wait for elements to be rendered to disable them
+            setTimeout(() => {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.attendance-tick, .fee-tick').forEach(el => {
+                    el.classList.add('cursor-not-allowed', 'opacity-60');
+                    el.onclick = null;
+                });
+            }, 500);
+        }
+    }
+
     // Navigation
     function switchTab(tab) {
       document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'dashboard');
       document.getElementById('view-students').classList.toggle('hidden', tab !== 'students');
       document.getElementById('view-attendance').classList.toggle('hidden', tab !== 'attendance');
       document.getElementById('view-settings').classList.toggle('hidden', tab !== 'settings');
+      document.getElementById('view-fees').classList.toggle('hidden', tab !== 'fees');
 
-      document.getElementById('nav-dashboard').classList.toggle('bg-indigo-600', tab === 'dashboard');
-      document.getElementById('nav-dashboard').classList.toggle('text-white', tab === 'dashboard');
-      document.getElementById('nav-dashboard').classList.toggle('text-slate-400', tab !== 'dashboard');
-
-      document.getElementById('nav-students').classList.toggle('bg-indigo-600', tab === 'students');
-      document.getElementById('nav-students').classList.toggle('text-white', tab === 'students');
-      document.getElementById('nav-students').classList.toggle('text-slate-400', tab !== 'students');
-
-      document.getElementById('nav-attendance').classList.toggle('bg-indigo-600', tab === 'attendance');
-      document.getElementById('nav-attendance').classList.toggle('text-white', tab === 'attendance');
-      document.getElementById('nav-attendance').classList.toggle('text-slate-400', tab !== 'attendance');
-
-      document.getElementById('nav-settings').classList.toggle('bg-indigo-600', tab === 'settings');
-      document.getElementById('nav-settings').classList.toggle('text-white', tab === 'settings');
-      document.getElementById('nav-settings').classList.toggle('text-slate-400', tab !== 'settings');
+      ['dashboard', 'students', 'attendance', 'settings', 'fees'].forEach(t => {
+        let btn = document.getElementById(`nav-${t}`);
+        if(btn) {
+            if (t === tab) {
+              btn.className = "w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all bg-indigo-600 text-white shadow-lg";
+            } else {
+              btn.className = "w-full flex items-center justify-center md:justify-start gap-3 p-2.5 md:p-3 rounded-xl transition-all hover:bg-slate-800 text-slate-400";
+            }
+        }
+      });
 
       const titles = {
           'dashboard': ['Academic Insights', 'Real-time performance analytics and records'],
           'students': ['Student Database', 'Manage student records and performance'],
           'attendance': ['Attendance Register', 'Daily entries and monthly records'],
-          'settings': ['System Settings', 'Configure subjects, limits, and preferences']
+          'settings': ['System Settings', 'Configure subjects, limits, and preferences'],
+          'fees': ['Fee Management', 'Track monthly fee payments']
       };
       
       document.getElementById('page-title').innerText = titles[tab][0];
       document.getElementById('page-subtitle').innerText = titles[tab][1];
       
-      if(tab === 'attendance' || tab === 'settings') {
-          document.getElementById('btn-add-student').classList.add('hidden');
+      if(tab === 'attendance' || tab === 'settings' || tab === 'fees') {
+          if (rp_role === 'admin') document.getElementById('btn-add-student').classList.add('hidden');
           if (tab === 'attendance') loadDailyAttendance();
           if (tab === 'settings') renderSettings();
+          if (tab === 'fees') renderFees();
       } else {
-          document.getElementById('btn-add-student').classList.remove('hidden');
+          if (rp_role === 'admin') document.getElementById('btn-add-student').classList.remove('hidden');
       }
 
       if (tab === 'dashboard') updateDashboard();
+    }
+
+    function renderFees() {
+        const tbody = document.getElementById('feesTableBody');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        tbody.innerHTML = students.map(s => {
+            if(!feesRecord[s.id]) feesRecord[s.id] = Array(12).fill(false);
+            let day = s.admissionDate ? s.admissionDate.split('-')[2] : '--';
+            return `
+                <tr class="border-b border-slate-800">
+                    <td class="px-6 py-4 font-bold text-white">${s.fullName}</td>
+                    <td class="px-4 py-4 text-center">${s.std}</td>
+                    <td class="px-4 py-4">${s.admissionDate}</td>
+                    <td class="px-4 py-4 text-rose-400 font-bold">${(feesRecord[s.id].indexOf(false) + 1)}</td>
+                    ${months.map((m, i) => `
+                        <td class="px-1 py-4 text-center">
+                            <div class="flex flex-col items-center gap-1.5">
+                                <span class="text-[9px] text-slate-400 font-bold bg-slate-800/50 px-1.5 py-0.5 rounded">${day} ${m}</span>
+                                <button onclick="toggleFee('${s.id}', ${i})" class="fee-tick w-6 h-6 rounded flex items-center justify-center transition-colors ${feesRecord[s.id][i] ? 'bg-emerald-500' : 'bg-slate-700 hover:bg-slate-600'}">
+                                    ${feesRecord[s.id][i] ? '<i data-lucide="check" size="14" class="text-white"></i>' : ''}
+                                </button>
+                            </div>
+                        </td>
+                    `).join('')}
+                </tr>
+            `;
+        }).join('');
+        lucide.createIcons();
+    }
+
+    function toggleFee(id, index) {
+        if(rp_role !== 'admin') return;
+        feesRecord[id][index] = !feesRecord[id][index];
+        localStorage.setItem('rp_fees', JSON.stringify(feesRecord));
+        renderFees();
     }
 
     // --- Settings Logic ---
@@ -518,12 +702,12 @@
         document.getElementById('att-monthly-view').classList.toggle('hidden', view !== 'monthly');
         
         if (view === 'daily') {
-            document.getElementById('btn-att-daily').className = "px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition-all";
-            document.getElementById('btn-att-monthly').className = "px-6 py-2.5 rounded-xl bg-slate-800/80 text-slate-400 font-bold hover:bg-slate-700 transition-all border border-slate-700";
+            document.getElementById('btn-att-daily').className = "flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition-all text-sm md:text-base";
+            document.getElementById('btn-att-monthly').className = "flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-slate-800/80 text-slate-400 font-bold hover:bg-slate-700 transition-all border border-slate-700 text-sm md:text-base";
             loadDailyAttendance();
         } else {
-            document.getElementById('btn-att-monthly').className = "px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition-all";
-            document.getElementById('btn-att-daily').className = "px-6 py-2.5 rounded-xl bg-slate-800/80 text-slate-400 font-bold hover:bg-slate-700 transition-all border border-slate-700";
+            document.getElementById('btn-att-monthly').className = "flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition-all text-sm md:text-base";
+            document.getElementById('btn-att-daily').className = "flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-slate-800/80 text-slate-400 font-bold hover:bg-slate-700 transition-all border border-slate-700 text-sm md:text-base";
             loadMonthlyRegister();
         }
     }
@@ -567,7 +751,7 @@
                         <div class="font-bold text-white">${s.fullName}</div>
                     </td>
                     <td class="px-8 py-4 text-center">
-                        <button onclick="toggleStatus('${s.id}', this)" class="w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${btnClass}">${btnText}</button>
+                        <button onclick="toggleStatus('${s.id}', this)" class="attendance-tick w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${btnClass}">${btnText}</button>
                     </td>
                 </tr>
             `;
@@ -575,16 +759,17 @@
     }
 
     function toggleStatus(id, btn) {
+        if(rp_role !== 'admin') return;
         let currentStatus = currentDailyData[id];
         let newStatus = currentStatus === 'P' ? 'A' : 'P'; 
         
         currentDailyData[id] = newStatus;
         
         if(newStatus === 'P') {
-            btn.className = 'w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+            btn.className = 'attendance-tick w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
             btn.textContent = 'Present';
         } else {
-            btn.className = 'w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-rose-500/20 text-rose-400 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.2)]';
+            btn.className = 'attendance-tick w-32 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-rose-500/20 text-rose-400 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.2)]';
             btn.textContent = 'Absent';
         }
         
@@ -593,6 +778,7 @@
     }
 
     function markAllAtt(status) {
+        if(rp_role !== 'admin') return;
         students.forEach(s => {
             currentDailyData[s.id] = status;
         });
@@ -712,38 +898,42 @@
     function saveStudent(e) {
       e.preventDefault();
       const editId = document.getElementById('editId').value;
+      const fname = document.getElementById('fname').value.trim();
+      const mname = document.getElementById('mname').value.trim();
+      const lname = document.getElementById('lname').value.trim();
+      const std = document.getElementById('std').value.trim();
+      const admissionDate = document.getElementById('admissionDate').value;
+      
       const marks = {};
       rp_subjects.forEach((sub, i) => {
           marks[sub.name] = parseInt(document.getElementById(`m_sub_${i}`).value) || 0;
       });
 
       const result = calculateResult(marks);
-      const student = {
-        id: editId || Date.now().toString(),
-        firstName: document.getElementById('fname').value,
-        middleName: document.getElementById('mname').value,
-        lastName: document.getElementById('lname').value,
-        fullName: `${document.getElementById('fname').value} ${document.getElementById('mname').value} ${document.getElementById('lname').value}`.trim(),
-        marks,
-        ...result
+      const studentData = {
+        fname, mname, lname,
+        fullName: `${fname} ${mname} ${lname}`.trim(),
+        std, admissionDate,
+        marks, ...result
       };
 
       if (editId) {
         const index = students.findIndex(s => s.id === editId);
-        students[index] = student;
+        students[index] = { ...students[index], ...studentData };
         showToast("Record Updated", "check-circle", "emerald");
       } else {
-        students.push(student);
+        students.push({
+            id: Date.now().toString(),
+            ...studentData
+        });
         showToast("Student Added", "check-circle", "indigo");
       }
 
       localStorage.setItem('rp_students', JSON.stringify(students));
       closeModal();
       renderTable();
+      renderFees();
       updateDashboard();
-      if(!document.getElementById('view-attendance').classList.contains('hidden')) {
-          loadDailyAttendance();
-      }
     }
 
     function deleteStudent(id) {
@@ -767,9 +957,11 @@
       openModal(); // Render inputs first
       const s = students.find(x => x.id === id);
       document.getElementById('editId').value = s.id;
-      document.getElementById('fname').value = s.firstName;
-      document.getElementById('mname').value = s.middleName;
-      document.getElementById('lname').value = s.lastName;
+      document.getElementById('fname').value = s.fname || '';
+      document.getElementById('mname').value = s.mname || '';
+      document.getElementById('lname').value = s.lname || '';
+      document.getElementById('std').value = s.std || '';
+      document.getElementById('admissionDate').value = s.admissionDate || '';
       
       rp_subjects.forEach((sub, i) => {
           const el = document.getElementById(`m_sub_${i}`);
@@ -804,14 +996,17 @@
                 <tr class="hover:bg-slate-800/20 transition-all group border-b border-slate-800/40 last:border-0">
                     <td class="px-8 py-6">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">${s.firstName[0]}${s.lastName[0]}</div>
+                            <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">${s.fname[0]}${s.lname[0]}</div>
                             <div>
                                 <div class="font-bold text-white group-hover:text-indigo-400 transition-colors">${s.fullName}</div>
                                 <div class="text-[10px] text-slate-500 font-mono">ID: ${s.id.slice(-6)}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="px-4 py-6">
+                    <td class="px-4 py-6 text-center text-slate-400 font-medium">
+                        ${s.std}
+                    </td>
+                    <td class="px-6 py-6">
                         <div class="flex gap-1 flex-wrap max-w-[200px]">
                             ${rp_subjects.map(sub => {
                                 let m = s.marks[sub.name] !== undefined ? s.marks[sub.name] : 0;
@@ -832,12 +1027,12 @@
                     <td class="px-8 py-6 text-right">
                         <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onclick="downloadPDF('${s.id}')" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors" title="Download Report"><i data-lucide="printer" size="16"></i></button>
-                            <button onclick="editStudent('${s.id}')" class="p-2 hover:bg-indigo-500/10 rounded-lg text-indigo-400 transition-colors" title="Edit"><i data-lucide="edit-3" size="16"></i></button>
-                            <button onclick="deleteStudent('${s.id}')" class="p-2 hover:bg-rose-500/10 rounded-lg text-rose-400 transition-colors" title="Delete"><i data-lucide="trash-2" size="16"></i></button>
+                            <button onclick="editStudent('${s.id}')" class="admin-only p-2 hover:bg-indigo-500/10 rounded-lg text-indigo-400 transition-colors" title="Edit"><i data-lucide="edit-3" size="16"></i></button>
+                            <button onclick="deleteStudent('${s.id}')" class="admin-only p-2 hover:bg-rose-500/10 rounded-lg text-rose-400 transition-colors" title="Delete"><i data-lucide="trash-2" size="16"></i></button>
                         </div>
                     </td>
                 </tr>
-            `).join('') : `<tr><td colspan="5" class="py-32 text-center text-slate-600"><p class="text-lg font-semibold">No records found</p></td></tr>`;
+            `).join('') : `<tr><td colspan="6" class="py-32 text-center text-slate-600"><p class="text-lg font-semibold">No records found</p></td></tr>`;
 
       lucide.createIcons();
     }
